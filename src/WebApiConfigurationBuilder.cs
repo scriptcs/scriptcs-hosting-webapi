@@ -68,11 +68,6 @@ namespace ScriptCs.Hosting.WebApi
             _configuration.Services.Replace(typeof(IHttpControllerTypeResolver), controllerResolver);
         }
 
-        private ScriptResult Execute(ScriptServices services, string file)
-        {
-            return services.Executor.Execute(file);
-        }
-
         private ScriptClass ControllerStategy(string name)
         {
             if (name.ToLower().EndsWith("controller.csx"))
