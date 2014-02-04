@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Common.Logging;
+using ScriptCs.Contracts;
 
 namespace ScriptCs.Hosting.WebApi
 {
@@ -21,8 +22,8 @@ namespace ScriptCs.Hosting.WebApi
             private List<string> _sharedCode = new List<string>();
             private IList<Func<string, ScriptClass>> _classStrategies;
 
-            public WebApiFilePreProcessor(IFileSystem fileSystem, ILog logger)
-                : base(fileSystem, logger)
+            public WebApiFilePreProcessor(IFileSystem fileSystem, ILog logger, IEnumerable<ILineProcessor> lineProcessors)
+                : base(fileSystem, logger, lineProcessors)
             {
                 _fileSystem = fileSystem;
             }
@@ -63,13 +64,13 @@ namespace ScriptCs.Hosting.WebApi
                 return scriptClass;
             }
 
-            protected override void ParseScript(List<string> scriptLines, FilePreProcessor.FilePreProcessorContext context, string path = null)
+            public override void ParseScript(List<string> scriptLines, FileParserContext context)
             {
                 //hack: need to change this to reference a shared binary
                 scriptLines.AddRange(_sharedCode);
-                var scriptClass = GetScriptClassFromScript(Path.GetFileName(path));
-                base.ParseScript(scriptLines, context, path);
-                var body = context.Body;
+                var scriptClass = GetScriptClassFromScript(Path.GetFileName(context.LoadedScripts.First()));
+                base.ParseScript(scriptLines, context);
+                var body = context.BodyLines;
                 if (scriptClass != null)
                 {
                     body.Insert(0, string.Format("public class {0} : {1} {{\r\n", scriptClass.ClassName,
