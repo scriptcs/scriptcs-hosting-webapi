@@ -7,22 +7,12 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Dispatcher;
 using Common.Logging;
-using Common.Logging.Log4Net;
 using log4net;
-using log4net.Core;
 using ScriptCs.Contracts;
 using LogManager = log4net.LogManager;
 
 namespace ScriptCs.Hosting.WebApi
 {
-    internal class CodeConfigurableLog4NetLogger : Log4NetLogger
-    {
-        protected internal CodeConfigurableLog4NetLogger(ILoggerWrapper log)
-            : base(log)
-        {
-        }
-    }
-
     public class WebApiConfigurationBuilder
     {
         private HttpConfiguration _configuration;
