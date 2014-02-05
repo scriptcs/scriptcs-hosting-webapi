@@ -6,7 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Dispatcher;
+using Common.Logging;
+using log4net;
 using ScriptCs.Contracts;
+using LogManager = log4net.LogManager;
 
 namespace ScriptCs.Hosting.WebApi
 {
@@ -31,12 +34,13 @@ namespace ScriptCs.Hosting.WebApi
 
         public HttpConfiguration Build()
         {
-            IList<Func<string, ScriptClass>> typeStrategies = new List<Func<string, ScriptClass>>(_typeStrategies);
-            var runtime = new ScriptRuntimeBuilder().
-                FilePreProcessor<WebApiFilePreProcessor>().Build();
-            runtime.Initialize();
+            var logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        var commonLogger = new CodeConfigurableLog4NetLogger(logger);
 
-            var services = runtime.GetScriptServices();
+            IList<Func<string, ScriptClass>> typeStrategies = new List<Func<string, ScriptClass>>(_typeStrategies);
+            var services = new ScriptServicesBuilder(new ScriptConsole(), commonLogger).
+                FilePreProcessor<WebApiFilePreProcessor>().Build();
+
             var preProcessor = (WebApiFilePreProcessor) services.FilePreProcessor;
             typeStrategies.Add(ControllerStategy);
             preProcessor.SetClassStrategies(typeStrategies);
@@ -49,7 +53,7 @@ namespace ScriptCs.Hosting.WebApi
         {
             IList<Type> controllers = new List<Type>();
             var packs = services.ScriptPackResolver.GetPacks().Union(new List<IScriptPack>() { new WebApiScriptHack() });
-            services.Executor.Initialize(services.AssemblyResolver.GetAssemblyPaths(_scriptsPath), packs);
+            services.Executor.Initialize(services.AssemblyResolver.GetAssemblyPaths(_scriptsPath, _scriptsPath), packs);
             var scripts = services.FileSystem.EnumerateFiles(_scriptsPath, "*.csx", SearchOption.TopDirectoryOnly);
             foreach (var script in scripts)
             {
